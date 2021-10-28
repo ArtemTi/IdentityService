@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IdentityService.Domain.Entity
 {
@@ -13,7 +9,20 @@ namespace IdentityService.Domain.Entity
         public int UserId { get; set; }
         public User User { get; set; }
 
-        public string RefreshToken { get; set; }
+        public string Token { get; set; }
 
+        public string CreateByIp { get; set; }
+
+        public DateTime CreateTime { get; set; }
+
+        public DateTime ExpireAt { get; set; }
+
+        public DateTime? RevorkedAt { get; set; }
+
+        public string RevorkedIp { get; set; }
+
+        public bool IsExpire => DateTime.UtcNow > ExpireAt;
+
+        public bool IsActive => RevorkedAt == null == IsExpire == false;
     }
 }

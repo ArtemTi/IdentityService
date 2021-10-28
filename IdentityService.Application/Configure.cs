@@ -1,5 +1,12 @@
 ﻿using IdentityService.Application.Service;
+using IdentityService.Infrastructure;
+using IdentityService.Infrastructure.EF;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +17,40 @@ namespace IdentityService.Application
 {
     public static class Configure
     {
-        public static void AddServices(this IServiceCollection services)
+        public static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.JwtOptionSection));
+
+            services.AddDbContext<ApplicationContext>(options =>
+            {
+                options.UseNpgsql(configuration.GetConnectionString("DefaultConnectionString"));
+            });
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    var jwtOptions = configuration.GetSection(JwtOptions.JwtOptionSection).Get<JwtOptions>();
+
+                    options.RequireHttpsMetadata = true;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        ValidateAudience = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = configuration.GetValue<string>(jwtOptions.Issuer),
+                        ValidAudience = configuration.GetValue<string>(jwtOptions.Audience),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>(jwtOptions.SecretKey)))
+                    };
+                });
+
+            services.AddScoped<IpService>();
             services.AddSingleton<TokenService>();
+            services.AddTransient<PasswordService>();
             services.AddTransient<AuthService>();
         }
     }
