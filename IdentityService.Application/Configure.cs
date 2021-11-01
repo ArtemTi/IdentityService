@@ -1,6 +1,7 @@
 ﻿using IdentityService.Application.Service;
 using IdentityService.Infrastructure;
 using IdentityService.Infrastructure.EF;
+using IdentityService.Infrastructure.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -42,14 +43,16 @@ namespace IdentityService.Application
                         ValidateLifetime = true,
                         ValidateAudience = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = configuration.GetValue<string>(jwtOptions.Issuer),
-                        ValidAudience = configuration.GetValue<string>(jwtOptions.Audience),
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>(jwtOptions.SecretKey)))
+                        ValidIssuer = jwtOptions.Issuer,
+                        ValidAudience = jwtOptions.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey))
                     };
                 });
 
+            services.AddTransient<TokenRepository>();
+
             services.AddScoped<IpService>();
-            services.AddSingleton<TokenService>();
+            services.AddTransient<TokenService>();
             services.AddTransient<PasswordService>();
             services.AddTransient<AuthService>();
         }
