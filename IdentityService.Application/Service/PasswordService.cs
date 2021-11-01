@@ -34,10 +34,10 @@ namespace IdentityService.Application.Service
         {
             var hashedBytes = Convert.FromBase64String(hashedPassword);
             var salt = new byte[SaltSize];
-            var hashedSubKey = new byte[hashedPassword.Length - SaltSize];
+            var hashedSubKey = new byte[hashedBytes.Length - SaltSize];
 
             Buffer.BlockCopy(hashedBytes, 0, hashedSubKey, 0, hashedSubKey.Length);
-            Buffer.BlockCopy(hashedBytes, hashedBytes.Length, salt, 0, SaltSize);
+            Buffer.BlockCopy(hashedBytes, hashedSubKey.Length, salt, 0, SaltSize);
 
             var actualSubKey = KeyDerivation.Pbkdf2(password, salt, KeyDerivationPrf.HMACSHA1, IterationCount, RequestedBytes);
 
